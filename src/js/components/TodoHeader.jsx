@@ -1,12 +1,21 @@
-import React, {useState} from "react"
+import React, {useState,useEffect} from "react"
 
 
-
-const TodoHeader = ({todos, setTodos}) => {
+const TodoHeader = () => {
     const [newTodo, setNewTodo] = useState("")
     const [counter, setCounter] = useState(0)
+    const [todos, setTodos] = useState([])
+    const LOCAL_STORAGE_KEY = 'todoApp.todos'
 
-    
+//load todos from local storage and set the counter
+    useEffect(() => {
+        const todoList = JSON.parse(localStorage.getItem(LOCAL_STORAGE_KEY))
+        if (todoList && todoList.length > 0) {setTodos(todoList)
+            const maxID = todoList.reduce((max,todo) => Math.max(max, todo.id), 0)
+        setCounter(maxID + 1)
+        }
+    }, [])
+
     //validate Input, if nothing is entered alert!
     const validateInput = () => {
         if (!newTodo || newTodo === "" || newTodo === undefined) {
@@ -20,10 +29,9 @@ const TodoHeader = ({todos, setTodos}) => {
         const addTask = () => {
             let newTodoObj = {
                 id: counter,
-                todo: newTodo
+                todo: newTodo.trim()
             }
 
-            //setTodos({...todos,newTodoObj})
             const appendedArray = [...todos, newTodoObj]
             setTodos(appendedArray)
             setNewTodo("")
@@ -31,23 +39,26 @@ const TodoHeader = ({todos, setTodos}) => {
             setCounter(counter + 1)
         }
 
+//Save changes in todos to local storage
+        useEffect(() => {
+            localStorage.setItem(LOCAL_STORAGE_KEY, JSON.stringify(todos))
+        }, [todos])
+        
+
+
 //Clear List
     const clearTask = () => {
-        setTodos(todos.filter(todos => todos.id !== todos.id))
-        
-    
-    const appendedArray = [...todos]
-        setTodos(todos.pop())
-        setCounter(counter - 1)
+        setTodos([])
+        console.log('Tasks cleared')
     }
 //Remove one Task
 
-    
 const todoRemove = (itemToRemove) => {
-
     setTodos(todos.filter(todos => todos.id !== itemToRemove.id))
+    console.log('A task was cleared')
 }
 
+//Display the quantity of tasks remaining, change to singular if 1
 const tasksRemainder = 
      todos.length > 1 || todos.length === 0 ? "Tasks Left" : "Task Left"
 
@@ -71,7 +82,10 @@ const tasksRemainder =
                 </button>
                 <ul>
                  {todos.map((todos) => (
-                        <li key={todos.id}>{todos.todo}<button className="removeTask"onClick={()=> todoRemove(todos)}>X</button></li>
+                        <li key={todos.id}>{todos.todo}
+                        <button className="removeTask"onClick={()=> todoRemove(todos)}>
+                            X</button>
+                            </li>
                     ))}
                 </ul>
 
@@ -80,10 +94,9 @@ const tasksRemainder =
                     onClick={clearTask}>
                     Clear ALL Tasks
                 </button>
-            <footer >{tasksRemainder} {todos.length}</footer>
+            <footer>{todos.length} {tasksRemainder}</footer>
             </header>
             </div>
-
         </>
     )
 }
