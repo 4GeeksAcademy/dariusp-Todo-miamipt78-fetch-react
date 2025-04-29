@@ -9,3 +9,41 @@
     import 'relative/path/to/stylesheet.scss';
 
 */
+body {
+    margin:auto;
+    background-color: beige;
+    width: 500px
+
+}
+header {
+    margin:auto;
+    font-family: cursive;    
+    border-bottom: 1px brown;
+    border-color: brown;
+}
+
+input {
+    border: 0;
+    background-color: rgb(255, 253, 228);
+    outline: none;
+
+}
+.removeTask {
+    opacity: 0;
+    transition: 0.3;
+    outline: none;
+    border: 0;
+
+}
+
+.removeTask:hover {
+    opacity: 01;
+    transition: 0.3;
+
+}
+
+.container {
+    background-color: rgb(255, 253, 228);
+    border-bottom: 1px;
+}
+
