@@ -26,7 +26,6 @@ input {
     border: 0;
     background-color: rgb(255, 253, 228);
     outline: none;
-
 }
 .removeTask {
     opacity: 0;
@@ -43,7 +42,9 @@ input {
 }
 
 .container {
+    margin-top: 100px;
     background-color: rgb(255, 253, 228);
     border-bottom: 1px;
+    border-radius: 10px;
 }
 
