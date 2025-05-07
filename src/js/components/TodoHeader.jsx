@@ -5,8 +5,21 @@ const TodoHeader = () => {
     const [newTodo, setNewTodo] = useState("")
     const [counter, setCounter] = useState(0)
     const [todos, setTodos] = useState([])
+    const [isLoading, setIsLoading] = useState(false)
     //const LOCAL_STORAGE_KEY = 'todoApp.todos'
-    
+    const [editingId, setEditingId] = useState(null);
+
+const toggleEditMode = (id) => {
+    setEditingId(editingId === id ? null : id);
+};
+
+const handleEditChange = (id, newValue) => {
+    setTodos(prevTodos => 
+        prevTodos.map(todo => 
+            todo.id === id ? { ...todo, editLabel: newValue } : todo
+        )
+    );
+};
 
 //load todos from local storage and set the counter
  /*   useEffect(() => {
@@ -43,18 +56,18 @@ const TodoHeader = () => {
         const addTask = () => {
             let newTodoObj = {
                 label: newTodo.trim(),
-                id: ''
             }
 
             const appendedArray = [...todos, newTodoObj]
             setTodos(appendedArray)
             setNewTodo("")
-            console.log(appendedArray)
-            setCounter(counter + 1)
+            //console.log(appendedArray)
+            //setCounter(counter + 1)
             postNewTask(newTodoObj)
         }
 
         const postNewTask = async (todoObject) => {
+
             const response = await fetch("https://playground.4geeks.com/todo/todos/Darius",{
             method: "POST",
             headers: {'Content-Type': 'application/json'},
@@ -62,8 +75,7 @@ const TodoHeader = () => {
         })
     if (response.ok)
         postNewTask()
-    .catch(error => {console.log('There is a problem', error)})
-
+    .catch(error => console.log('There is a problem', error))
         }
 
 //Save changes in todos to local storage
@@ -71,9 +83,68 @@ const TodoHeader = () => {
             localStorage.setItem(LOCAL_STORAGE_KEY, JSON.stringify(todos))
         }, [todos])
 */
+//Update Todo Task
+/*
+const updateTask = async (todoToUpdate, newLabel) => {
+
+            const updatedTodo = {...todoToUpdate, label: newLabel}
+            const response = await fetch(`https://playground.4geeks.com/todo/todos/${todoToUpdate.id}`, {
+                method: "PUT",
+                headers: {'Content-Type': 'application/json'},
+                body: JSON.stringify(updatedTodo)})
+                if (!response.ok) {
+                    throw new Error(`HTTP error! status: ${response.status}`)
+                }
+                setTodos(prevTodos => 
+                    prevTodos.map(todo => 
+                        todo.id === todoToUpdate.id ? updatedTodo : todo
+                    )
+                );
+                console.log('Task updated successfully');
+            }
+*/
+const updateTask = async (todoToUpdate, newLabel) => {
+    if (!newLabel.trim()) {
+        alert("Task cannot be empty")
+        return
+    }
+
+    try {
+        setIsLoading(true)
+        const updatedTodo = {
+            ...todoToUpdate,
+            label: newLabel.trim()
+        }
+
+        const response = await fetch(
+            `https://playground.4geeks.com/todo/todos/${todoToUpdate.id}`, 
+            {
+                method: "PUT",
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify(updatedTodo)
+            }
+        )
+
+        if (!response.ok) throw new Error('Update failed')
+
+        setTodos(prevTodos => 
+            prevTodos.map(todo => 
+                todo.id === todoToUpdate.id ? updatedTodo : todo
+            )
+        )
+        setEditingId(null)
+    } catch (error) {
+        console.error('Update error:', error)
+    } finally {
+        setIsLoading(false)
+    }
+}
+
+
+
 
 //Clear List
-    const clearTask = () => {
+    const clearTask = async () => {
         setTodos([])
         console.log('Tasks cleared')
     }
@@ -85,6 +156,7 @@ const todoRemove = (itemToRemove) => {
 }
 */
 
+//Delete the Task
 const todoRemove = async(todoRemove) => {
     const response = await fetch(`https://playground.4geeks.com/todo/todos/${todoRemove.id}`, {
         method: 'DELETE'
@@ -113,17 +185,52 @@ const tasksRemainder =
                 value={newTodo}
                 onChange={event => setNewTodo(event.target.value)}/>
 
-                <button
+<button
                     className="add-task"
-                    onClick={validateInput}>
-                    Add Task
+                    onClick={validateInput}
+                    disabled={isLoading}>
+                    {isLoading ? 'Adding...' : 'Add Task'}
                 </button>
+                
                 <ol>
-                 {todos.map((todos) => (
-                        <li key={todos.id}>{todos.label}
-                        <button className="removeTask"onClick={()=> todoRemove(todos)}>
-                            X</button>
-                            </li>
+                    {todos.map((todo) => (
+                        <li key={todo.id}>
+                            {editingId === todo.id ? (
+                                <>
+                                    <input
+                                        type="text"
+                                        value={todo.editLabel || todo.label}
+                                        onChange={(e) => handleEditChange(todo.id, e.target.value)}
+                                        disabled={isLoading}
+                                    />
+                                    <button 
+                                        onClick={() => updateTask(todo, todo.editLabel || todo.label)}
+                                        disabled={isLoading}>
+                                        {isLoading ? 'Saving...' : 'Save'}
+                                    </button>
+                                    <button 
+                                        onClick={() => setEditingId(null)}
+                                        disabled={isLoading}>
+                                        Cancel
+                                    </button>
+                                </>
+                            ) : (
+                                <>
+                                    {todo.label}
+                                    <button 
+                                        className="removeTask"
+                                        onClick={() => todoRemove(todo)}
+                                        disabled={isLoading}>
+                                        X
+                                    </button>
+                                    <button 
+                                        onClick={() => toggleEditMode(todo.id)}
+                                        disabled={isLoading || editingId !== null}>
+                                        Edit
+                                    </button>
+                                </>
+                            )}
+                        </li>
                     ))}
                 </ol>
 
