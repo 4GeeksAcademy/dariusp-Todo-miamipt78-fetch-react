@@ -1,62 +1,8 @@
-                           /* {editingId === todo.id ? (
-                                <>
-                                    <input
-                                        type="text"
-                                        value={todo.editLabel || todo.label}
-                                        onChange={(e) => handleEditChange(todo.id, e.target.value)}
-                                        disabled={isLoading}
-                                    />
-                                    <button 
-                                        onClick={() => updateTask(todo, todo.editLabel || todo.label)}
-                                        disabled={isLoading}>
-                                        {isLoading ? 'Saving...' : 'Save'}
-                                    </button>
-                                    <button 
-                                        onClick={() => setEditingId(null)}
-                                        disabled={isLoading}>
-                                        Cancel
-                                    </button>
-                                </>
-                            ) : (
+                           /* 
                              */
 
 /*
-const updateTask = async (todoToUpdate, newLabel) => {
-    if (!newLabel.trim()) {
-        alert("Task cannot be empty")
-        return
-    }
 
-    try {
-        setIsLoading(true)
-        const updatedTodo = {
-            ...todoToUpdate,
-            label: newLabel.trim()
-        }
-
-        const response = await fetch(
-            `https://playground.4geeks.com/todo/todos/${todoToUpdate.id}`, 
-            {
-                method: "PUT",
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify(updatedTodo)
-            }
-        )
-
-        if (!response.ok) throw new Error('Update failed')
-
-        setTodos(prevTodos => 
-            prevTodos.map(todo => 
-                todo.id === todoToUpdate.id ? updatedTodo : todo
-            )
-        )
-        setEditingId(null)
-    } catch (error) {
-        console.error('Update error:', error)
-    } finally {
-        setIsLoading(false)
-    }
-}
 */
 
 
