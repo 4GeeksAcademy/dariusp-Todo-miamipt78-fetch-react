@@ -6,32 +6,8 @@ const TodoHeader = () => {
     const [counter, setCounter] = useState(0)
     const [todos, setTodos] = useState([])
     const [isLoading, setIsLoading] = useState(false)
-    //const LOCAL_STORAGE_KEY = 'todoApp.todos'
-    const [editingId, setEditingId] = useState(null);
 
-const toggleEditMode = (id) => {
-    setEditingId(editingId === id ? null : id);
-};
-
-const handleEditChange = (id, newValue) => {
-    setTodos(prevTodos => 
-        prevTodos.map(todo => 
-            todo.id === id ? { ...todo, editLabel: newValue } : todo
-        )
-    );
-};
-
-//load todos from local storage and set the counter
- /*   useEffect(() => {
-        const todoList = JSON.parse(localStorage.getItem(LOCAL_STORAGE_KEY))
-        if (todoList && todoList.length > 0) {setTodos(todoList)
-            const maxID = todoList.reduce((max,todo) => Math.max(max, todo.id), 0)
-        setCounter(maxID + 1)
-        }
-    }, [])
-*/
-    
-    //a function to fetch the data from a user's todos
+    //function to fetch the data from a user's todos
     useEffect(() => {
         function fetchData(){
             fetch('https://playground.4geeks.com/todo/users/Darius')
@@ -43,7 +19,7 @@ const handleEditChange = (id, newValue) => {
     }, [])
 
 
-    //validate Input, if nothing is entered alert!
+    //validate Input, if nothing is entered alert!, if validation passes add the task
     const validateInput = () => {
         if (!newTodo || newTodo === "" || newTodo === undefined) {
             alert("Please enter a value")}
@@ -52,123 +28,80 @@ const handleEditChange = (id, newValue) => {
             }
         }
     
-        //create the object in the todo list
-        const addTask = () => {
-            let newTodoObj = {
-                label: newTodo.trim(),
-            }
+        //Add the new Task, first POST to get ID's then if i get a response add the new task to the array and clear the input box
+const addTask = async () => {
+  try {
+    const newTodoObj = {
+      label: newTodo.trim()
+    };
 
-            const appendedArray = [...todos, newTodoObj]
-            setTodos(appendedArray)
-            setNewTodo("")
-            //console.log(appendedArray)
-            //setCounter(counter + 1)
-            postNewTask(newTodoObj)
-        }
+    const response = await fetch("https://playground.4geeks.com/todo/todos/Darius", {
+      method: "POST",
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(newTodoObj)
+    });
 
-        const postNewTask = async (todoObject) => {
+    if (!response.ok) throw new Error('Failed to create todo');
 
-            const response = await fetch("https://playground.4geeks.com/todo/todos/Darius",{
-            method: "POST",
-            headers: {'Content-Type': 'application/json'},
-            body: JSON.stringify(todoObject)
-        })
-    if (response.ok)
-        postNewTask()
-    .catch(error => console.log('There is a problem', error))
-        }
+    const createdTodo = await response.json();
 
-//Save changes in todos to local storage
-     /*   useEffect(() => {
-            localStorage.setItem(LOCAL_STORAGE_KEY, JSON.stringify(todos))
-        }, [todos])
-*/
-//Update Todo Task
-/*
-const updateTask = async (todoToUpdate, newLabel) => {
+    setTodos(prev => [...prev, createdTodo]);
+    setNewTodo("");
 
-            const updatedTodo = {...todoToUpdate, label: newLabel}
-            const response = await fetch(`https://playground.4geeks.com/todo/todos/${todoToUpdate.id}`, {
-                method: "PUT",
-                headers: {'Content-Type': 'application/json'},
-                body: JSON.stringify(updatedTodo)})
-                if (!response.ok) {
-                    throw new Error(`HTTP error! status: ${response.status}`)
-                }
-                setTodos(prevTodos => 
-                    prevTodos.map(todo => 
-                        todo.id === todoToUpdate.id ? updatedTodo : todo
-                    )
-                );
-                console.log('Task updated successfully');
-            }
-*/
-const updateTask = async (todoToUpdate, newLabel) => {
-    if (!newLabel.trim()) {
-        alert("Task cannot be empty")
-        return
-    }
-
-    try {
-        setIsLoading(true)
-        const updatedTodo = {
-            ...todoToUpdate,
-            label: newLabel.trim()
-        }
-
-        const response = await fetch(
-            `https://playground.4geeks.com/todo/todos/${todoToUpdate.id}`, 
-            {
-                method: "PUT",
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify(updatedTodo)
-            }
-        )
-
-        if (!response.ok) throw new Error('Update failed')
-
-        setTodos(prevTodos => 
-            prevTodos.map(todo => 
-                todo.id === todoToUpdate.id ? updatedTodo : todo
-            )
-        )
-        setEditingId(null)
-    } catch (error) {
-        console.error('Update error:', error)
-    } finally {
-        setIsLoading(false)
-    }
-}
+  } catch (error) {
+    console.error('Error adding todo:', error);
+  }
+};
 
 
 
 
-//Clear List
+//Clear List of tasks
     const clearTask = async () => {
+
+        try {
+        const deleteAlltask  =  todos.map(todo => fetch(`https://playground.4geeks.com/todo/todos/${todo.id}`, {
+        method: 'DELETE'
+    })
+)
+ const responses = await Promise.all(deleteAlltask);
+
+        const allSuccessful = responses.every(r => r.ok);
+        if (!allSuccessful) {
+            const failedResponses = responses.filter(failedResponse => !failedResponse.ok);
+            throw new Error(`${failedResponses.length} deletions failed`);
+        }
         setTodos([])
-        console.log('Tasks cleared')
+        
+        console.log('All tasks deleted successfully');
+    } catch (error) {
+        console.error('Error deleting tasks:', error);
+        throw error;
     }
-//Remove one Task
-/*
-const todoRemove = (itemToRemove) => {
-    setTodos(todos.filter(data => todos.id !== itemToRemove.id))
-    console.log('A task was cleared')
 }
-*/
+
+
 
 //Delete the Task
 const todoRemove = async(todoRemove) => {
     const response = await fetch(`https://playground.4geeks.com/todo/todos/${todoRemove.id}`, {
-        method: 'DELETE'
+        method: 'DELETE',
+        body: JSON.stringify({ force: true }),
+        headers: {
+        'Content-Type': 'application/json',
+        }
     })
     if (!response.ok) {
-        throw new Error(`HTTP error! status: ${response.status}`)
+        const errorData = await response.json();
+        console.error('Full error response:', errorData);
+      throw new Error(`HTTP error! status: ${response.status}`);
     }
         setTodos(todos.filter(todo => todo.id !== todoRemove.id));
         console.log('Task deleted successfully')
 }
+
        
-//Display the quantity of tasks remaining, change to singular if 1
+//Display the quantity of tasks remaining
 const tasksRemainder = 
      todos.length > 1 || todos.length === 0 ? "Tasks Left" : "Task Left"
 
@@ -185,7 +118,7 @@ const tasksRemainder =
                 value={newTodo}
                 onChange={event => setNewTodo(event.target.value)}/>
 
-<button
+                <button
                     className="add-task"
                     onClick={validateInput}
                     disabled={isLoading}>
@@ -195,26 +128,7 @@ const tasksRemainder =
                 <ol>
                     {todos.map((todo) => (
                         <li key={todo.id}>
-                            {editingId === todo.id ? (
-                                <>
-                                    <input
-                                        type="text"
-                                        value={todo.editLabel || todo.label}
-                                        onChange={(e) => handleEditChange(todo.id, e.target.value)}
-                                        disabled={isLoading}
-                                    />
-                                    <button 
-                                        onClick={() => updateTask(todo, todo.editLabel || todo.label)}
-                                        disabled={isLoading}>
-                                        {isLoading ? 'Saving...' : 'Save'}
-                                    </button>
-                                    <button 
-                                        onClick={() => setEditingId(null)}
-                                        disabled={isLoading}>
-                                        Cancel
-                                    </button>
-                                </>
-                            ) : (
+
                                 <>
                                     {todo.label}
                                     <button 
@@ -223,19 +137,15 @@ const tasksRemainder =
                                         disabled={isLoading}>
                                         X
                                     </button>
-                                    <button 
-                                        onClick={() => toggleEditMode(todo.id)}
-                                        disabled={isLoading || editingId !== null}>
-                                        Edit
-                                    </button>
+
                                 </>
-                            )}
+                            
                         </li>
                     ))}
                 </ol>
 
                 <button
-                    className="remove-task"
+                    className="removeAlltasks"
                     onClick={clearTask}>
                     Clear ALL Tasks
                 </button>
